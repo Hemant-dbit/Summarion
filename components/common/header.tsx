@@ -1,27 +1,48 @@
-'use client';
+"use client";
 
 import React from "react";
 import NavLink from "@/components/common/nav-link";
 import { FileText } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const Header = () => {
   const isLoggedIn = false;
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <nav className="container grid grid-cols-3 items-center py-2 lg:px-8 px-2 mx-auto">
+    <nav
+      className={`sticky top-0 z-50 w-full transition-all ${
+        scrolled
+          ? "bg-white/10 text-black shadow backdrop-blur-md border-b border-gray-200"
+          : "bg-transparent text-gray-900"
+      } grid grid-cols-3 items-center px-6 py-3`}
+    >
       {/* Left - Logo */}
       <div className="flex items-center space-x-4">
         <NavLink href="/" className="flex items-center gap-1 lg:gap-2 shrink-0">
           <span className="flex items-center space-x-1">
             <FileText className="w-5 h-5 lg:w-8 lg:h-8 relative top-[1px] text-gray-900 hover:rotate-12 transform transition duration-200 ease-in-out" />
-            <span className="font-bold lg:text-xl text-gray-900">Summarion</span>
+            <span className="font-bold lg:text-xl text-gray-900">
+              Summarion
+            </span>
           </span>
         </NavLink>
       </div>
 
       {/* Center - Pricing */}
-      <div className="flex justify-center">
-        <NavLink href="/pricing">Pricing</NavLink>
+      <div className="flex justify-center ">
+        <NavLink
+          href="/pricing"
+          className="text-m md:text-base lg:text-lg space-x-4"
+        >
+          Pricing
+        </NavLink>
         {isLoggedIn && <NavLink href="/dashboard">Your Summaries</NavLink>}
       </div>
 
@@ -34,7 +55,12 @@ const Header = () => {
             {/* <Button>User</Button> */}
           </div>
         ) : (
-          <NavLink href="/sign-in">Sign In</NavLink>
+          <NavLink
+            href="/sign-in"
+            className="text-m md:text-base lg:text-lg space-x-4"
+          >
+            Sign In
+          </NavLink>
         )}
       </div>
     </nav>
