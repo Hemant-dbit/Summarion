@@ -26,11 +26,11 @@ const HeroSection = () => {
       </p>
 
       {/* CTA Button */}
-      <div className="mt-8 animate-fade-in-up delay-200">
+      <div className="mt-10 animate-fade-in-up delay-200">
         <Link href="/pricing">
-          <Button className="group rounded-full bg-gradient-to-r from-blue-400 to-blue-900 text-white px-6 py-3 text-base font-semibold shadow hover:from-blue-900 hover:to-blue-400 transition-all duration-300">
+          <Button className="group mr-2 rounded-full bg-gradient-to-r from-blue-400 to-blue-900 text-white px-5 py-5 text-base font-semibold shadow hover:from-blue-900 hover:to-blue-400 transition-all duration-300">
             Try Summarion
-            <ArrowRight className=" w-5 h-5 text-white transition-transform duration-300 group-hover:translate-x-1" />
+            <ArrowRight className="w-8 h-8 text-white transition-transform duration-300 group-hover:translate-x-1 " />
           </Button>
         </Link>
       </div>

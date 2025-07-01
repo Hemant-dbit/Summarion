@@ -19,6 +19,10 @@ const DemoSection = () => {
           into a clear, concise summary!
         </h2>
       </div>
+
+      <div>
+        {/*Summary Viewer*/}
+      </div>
     </section>
   );
 };
