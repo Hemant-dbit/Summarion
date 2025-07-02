@@ -99,8 +99,8 @@ const PricingSection: React.FC = () => {
                 <button
                   className={`w-full py-3 mt-4 rounded-full font-semibold transition ${
                     plan.highlight
-                      ? "bg-blue-600 text-white hover:bg-gradient-to-r from-blue-800 to-blue-400"
-                      : "bg-gray-200 text-black hover:bg-gradient-to-r from-gray-800 to-gray-400"
+                      ? "bg-gradient-to-r from-blue-800 to-blue-400 text-white hover:from-blue-400 hover:to-blue-800"
+                      : "bg-gradient-to-r from-gray-800 to-gray-400  text-black hover:from-gray-400 hover:to-gray-800"
                   }`}
                 >
                   {plan.buttonText}

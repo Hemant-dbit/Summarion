@@ -14,7 +14,7 @@ const CTASection: React.FC = () => {
           concise summaries.
         </p>
         <Link href="/signup">
-          <button className="bg-blue-500 text-white font-semibold py-3 px-8 rounded-full shadow hover:bg-blue-100 transition duration-300 transform hover:scale-105 group ">
+          <button className="bg-gradient-to-r from-blue-800 to-blue-400 text-white hover:from-blue-400 hover:to-blue-800 text-white font-semibold py-3 px-8 rounded-full shadow transition duration-300 transform hover:scale-105 group ">
             Get Started for Free
             <ArrowRight className="inline-block ml-2 w-5 h-5 text-white transition-transform duration-300 group-hover:translate-x-1" />
           </button>
