@@ -7,6 +7,7 @@ import { useUser } from "@clerk/nextjs";
 import z from "zod";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
+// Remove direct import of uploadAndExtractAction
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
@@ -26,26 +27,56 @@ const UploadPage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [status, setStatus] = useState("");
+  const [extractedText, setExtractedText] = useState<string>("");
+  const [summary, setSummary] = useState<string>("");
 
   // Initialize useUploadThing with your file route slug
   const { startUpload, isUploading: isUtUploading } = useUploadThing(
-    "pdfUploader", // This must match your route slug from ourFileRouter
+    "pdfUploader",
     {
-      onClientUploadComplete: (res: string | any[]) => {
+      onClientUploadComplete: async (res: string | any[]) => {
         // This runs on the client after the upload is complete
-        console.log("UploadThing client upload complete:", res);
-        // You'll get an array of uploaded files, even if maxFileCount is 1
-        if (res && res.length > 0) {
-          const uploadedFile = res[0];
-          // Continue with the rest of your backend calls using uploadedFile.url
-          handlePostUploadProcessing(uploadedFile.url, uploadedFile.name);
+        
+        setStatus("✅ File uploaded successfully! Extracting text...");
+        setSelectedFile(null);
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) (fileInput as HTMLInputElement).value = "";
+        setIsUploading(false);
+        // Call API route to extract text
+        if (res && res.length > 0 && res[0].name && selectedFile) {
+          try {
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+            const apiRes = await fetch("/api/upload-and-extract", {
+              method: "POST",
+              body: formData,
+            });
+            if (!apiRes.ok) throw new Error("Failed to extract text");
+            const result = await apiRes.json();
+            setExtractedText(result.text);
+            setStatus("✅ File uploaded and text extracted successfully! Generating summary...");
+            // Call Gemini summary API
+            const summaryRes = await fetch("/api/gemini-summary", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: result.text }),
+            });
+            if (!summaryRes.ok) throw new Error("Failed to generate summary");
+            const summaryData = await summaryRes.json();
+            setSummary(summaryData.summary);
+            setStatus("✅ File uploaded, text extracted, and summary generated!");
+          } catch (error) {
+            setStatus("❌ Error extracting text or generating summary");
+            setExtractedText("");
+            setSummary("");
+          }
         }
       },
       onUploadError: (error: Error) => {
         // This runs if the upload fails on the client-side or server-side
         console.error("UploadThing error:", error);
         setStatus(`❌ Upload error: ${error.message}`);
-        setIsUploading(false); // Make sure to reset state
+        setIsUploading(false);
       },
       onUploadBegin: () => {
         console.log("Upload has begun!");
@@ -61,85 +92,6 @@ const UploadPage = () => {
     if (file) {
       setSelectedFile(file);
       setStatus("");
-    }
-  };
-
-  // New function to handle the steps after UploadThing completes its upload
-  const handlePostUploadProcessing = async (
-    fileUrl: string,
-    fileName: string
-  ) => {
-    try {
-      setStatus("Extracting text from PDF...");
-
-      const extractResponse = await fetch("/api/extract-text", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fileUrl: fileUrl,
-          fileName: fileName,
-        }),
-      });
-
-      if (!extractResponse.ok) {
-        throw new Error("Failed to extract text from PDF");
-      }
-
-      const extractData = await extractResponse.json();
-      setStatus("Generating AI summary...");
-
-      const summaryResponse = await fetch("/api/gemini-summary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: extractData.text,
-          fileName: fileName,
-        }),
-      });
-
-      if (!summaryResponse.ok) {
-        throw new Error("Failed to generate AI summary");
-      }
-
-      const summaryData = await summaryResponse.json();
-      setStatus("Saving to database...");
-
-      const saveResponse = await fetch("/api/save-summary", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fileName: fileName,
-          fileUrl: fileUrl,
-          extractedText: extractData.text,
-          summary: summaryData.summary,
-          createdAt: new Date().toISOString(),
-          uploadedBy: user?.id,
-        }),
-      });
-
-      if (!saveResponse.ok) {
-        throw new Error("Failed to save to database");
-      }
-
-      setStatus("✅ Success! PDF processed and saved successfully!");
-      setSelectedFile(null);
-      const fileInput = document.querySelector('input[type="file"]');
-      if (fileInput) (fileInput as HTMLInputElement).value = "";
-    } catch (error) {
-      console.error("Error in post-upload process:", error);
-      if (error instanceof Error) {
-        setStatus(`❌ Error: ${error.message}`);
-      } else {
-        setStatus("❌ Error: An unknown error occurred during processing");
-      }
-    } finally {
-      setIsUploading(false); // Ensure final state reset
     }
   };
 
@@ -163,7 +115,6 @@ const UploadPage = () => {
 
     console.log("File validation successful:", validation.data);
     // Trigger UploadThing upload
-    // `startUpload` expects an array of files
     await startUpload([selectedFile]);
   };
 
@@ -229,6 +180,18 @@ const UploadPage = () => {
           {status && (
             <div className="mt-4 p-3 bg-white rounded-lg border">
               <p className="text-sm text-gray-700">{status}</p>
+            </div>
+          )}
+          {/* {extractedText && (
+            <div className="mt-4 p-3 bg-white rounded-lg border max-w-lg mx-auto text-left overflow-x-auto">
+              <h2 className="font-semibold mb-2">Extracted Text:</h2>
+              <pre className="whitespace-pre-wrap text-xs">{extractedText}</pre>
+            </div>
+          )} */}
+          {summary && (
+            <div className="mt-4 p-3 bg-white rounded-lg border max-w-lg mx-auto text-left overflow-x-auto">
+              <h2 className="font-semibold mb-2">Gemini Summary:</h2>
+              <pre className="whitespace-pre-wrap text-xs">{summary}</pre>
             </div>
           )}
 
