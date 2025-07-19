@@ -6,10 +6,12 @@ import {
 
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
 
+// import pdfParse from "pdf-parse";
+
 export const UploadButton = generateUploadButton<OurFileRouter>();
 export const UploadDropzone = generateUploadDropzone<OurFileRouter>();
 
 export const { useUploadThing, uploadFiles } =
   generateReactHelpers<OurFileRouter>({
-    url: "/api/uploadthing", // Make sure this matches your route
+    url: "/app/api/uploadthing", // Make sure this matches your route
   });
